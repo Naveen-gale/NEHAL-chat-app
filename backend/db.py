@@ -13,7 +13,7 @@ memory_col = db["memory"]
 emotion_col = db["emotions"]
 chats_col = db["chats"]  # ✅ NEW
 
-print("✅ MongoDB connected to:", db.name)
+print("[OK] MongoDB connected to:", db.name)
 
 
 

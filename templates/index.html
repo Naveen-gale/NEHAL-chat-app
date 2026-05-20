@@ -1,36 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>NEHAL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
 
-<div class="app">
-  <header class="header blur-glass">
-    <h1>NEHAL <span class="badge">AI</span></h1>
-    <span class="model">llama3.1-8b</span>
-  </header>
+  <div class="app">
+    <header class="header blur-glass">
+      <h1>NEHAL <span class="badge">&hearts;</span></h1>
+      <span class="model">Naveen</span>
+    </header>
 
-  <div class="chat-area" id="chatArea"></div>
+    <div class="chat-area" id="chatArea"></div>
 
-  <div class="input-area blur-glass">
-    <div class="input-container">
-      <input
-        type="text"
-        id="userInput"
-        placeholder="Type a message..."
-        autocomplete="off"
-      />
-      <button id="sendBtn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="send-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      </button>
+    <div class="input-area blur-glass">
+      <div class="input-container">
+        <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off" />
+        <button id="sendBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="send-icon">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<script defer src="{{ url_for('static', filename='js/chat.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
+
 </html>
