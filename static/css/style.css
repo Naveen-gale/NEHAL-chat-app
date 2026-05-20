@@ -12,7 +12,7 @@ html, body {
 }
 
 .app {
-  width: 100%; height: 100vh;
+  width: 100%; height: 100vh; height: 100dvh;
   display: flex; flex-direction: column;
   background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 70%);
 }
@@ -118,7 +118,7 @@ html, body {
 }
 
 .input-container input {
-  flex: 1; background: transparent; border: none; outline: none;
+  flex: 1; min-width: 0; background: transparent; border: none; outline: none;
   color: #f8fafc; font-size: 15px; padding: 10px 16px;
 }
 .input-container input::placeholder { color: #64748b; }
@@ -134,9 +134,69 @@ html, body {
 }
 .send-icon { width: 18px; height: 18px; }
 
+/* 💬 TYPING INDICATOR */
+.message.ai.typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 18px;
+  min-height: 48px;
+}
+.message.ai.typing .dot {
+  width: 8px;
+  height: 8px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.message.ai.typing .dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.message.ai.typing .dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+/* 🔐 AUTHENTICATION PAGES */
+.auth-page { justify-content: center; align-items: center; }
+.auth-container {
+  padding: 40px; border-radius: 20px; text-align: center;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.auth-container h2 { margin-bottom: 24px; font-weight: 600; }
+.auth-container form { display: flex; flex-direction: column; gap: 16px; }
+.auth-container input {
+  padding: 12px 16px; border-radius: 12px; font-size: 15px;
+  background: rgba(30, 41, 59, 0.8); color: #fff;
+  border: 1px solid rgba(255,255,255,0.1); outline: none;
+  transition: border 0.3s ease;
+}
+.auth-container input:focus { border-color: #a855f7; }
+.auth-btn {
+  padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600;
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  color: white; border: none; cursor: pointer; transition: transform 0.2s;
+}
+.auth-btn:hover { transform: translateY(-2px); }
+.auth-link { margin-top: 20px; font-size: 14px; color: #94a3b8; }
+.auth-link a { color: #ec4899; text-decoration: none; font-weight: 500; }
+.auth-link a:hover { text-decoration: underline; }
+.error-msg { background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+.logout-btn { background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 6px 12px; border-radius: 12px; text-decoration: none; font-size: 13px; font-weight: 500; border: 1px solid rgba(239, 68, 68, 0.3); transition: background 0.2s; }
+.logout-btn:hover { background: rgba(239, 68, 68, 0.4); }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
 @media (max-width: 768px) {
   .chat-area { padding: 16px; gap: 12px; }
-  .message { max-width: 90%; font-size: 14.5px; padding: 12px 16px; }
-  .header { height: 60px; padding: 0 16px; }
-  .input-area { padding: 12px 16px 20px; }
+  .message { max-width: 85%; font-size: 14.5px; padding: 12px 16px; }
+  .header { height: 56px; padding: 0 16px; }
+  .input-area { padding: 8px 12px 12px; }
+  .input-container { padding: 4px; }
+  .input-container input { padding: 8px 12px; font-size: 14.2px; }
+  .input-container button { width: 36px; height: 36px; }
 }

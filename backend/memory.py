@@ -40,8 +40,11 @@ def get_memory_context(user_id):
     context = ""
 
     user = users_col.find_one({"user_id": user_id})
-    if user and user.get("name"):
-        context += f"The user's name is {user['name']}. "
+    if user:
+        if user.get("name"):
+            context += f"The user's name is {user['name']}. "
+        elif user.get("username"):
+            context += f"The user's name is {user['username']}. "
 
     facts = memory_col.find({"user_id": user_id})
     facts_list = [f["fact"] for f in facts]
@@ -65,10 +68,12 @@ def save_message(user_id, sender, text):
         "sender": sender,
         "text": text
     })
-def get_chat_history(user_id, limit=50):
-    chats = chats_col.find(
+def get_chat_history(user_id, limit=30):
+    # Fetch the latest messages (newest first) and reverse them for chronological order
+    chats = list(chats_col.find(
         {"user_id": user_id}
-    ).sort("_id", 1).limit(limit)
+    ).sort("_id", -1).limit(limit))
+    chats.reverse()
 
     history = []
     for c in chats:
