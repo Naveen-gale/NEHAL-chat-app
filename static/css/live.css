@@ -1,0 +1,355 @@
+/* --------------------------------- */
+/* GEMINI LIVE IMMERSIVE UI          */
+/* --------------------------------- */
+
+* {
+  box-sizing: border-box;
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* PITCH BLACK SPACE BACKGROUND */
+.live-app {
+  background-color: #030305; /* Deep, deep space black */
+  background-image: 
+    radial-gradient(circle at 50% 10%, rgba(255,255,255,0.02) 0%, transparent 40%), 
+    radial-gradient(circle at 50% 90%, #0a1930 0%, #030305 60%); /* Subtle blue underglow */
+  display: flex; 
+  flex-direction: column; 
+  height: 100vh; 
+  height: 100dvh;
+  color: #ffffff;
+  overflow: hidden;
+  position: relative;
+}
+
+/* --------------------------------- */
+/* HEADER (MATCHING IMAGE TOP-LEFT)  */
+/* --------------------------------- */
+.header {
+  padding: 24px 30px;
+  position: relative;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sparkle {
+  color: #ffffff;
+  animation: pulseSparkle 2s infinite alternate;
+}
+
+.live-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+#userBadge {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+@keyframes pulseSparkle {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+
+
+/* --------------------------------- */
+/* MAIN CONTENT & TRANSCRIPTS        */
+/* --------------------------------- */
+.live-main {
+  flex: 1; 
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  position: relative;
+  width: 100%;
+}
+
+.content-wrapper {
+  position: absolute;
+  top: 15%; /* Push transcripts up into the dark area */
+  width: 100%;
+  max-width: 700px;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 40;
+}
+
+.transcript-area {
+  width: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px;
+  text-align: center; 
+}
+
+.transcript { 
+  font-size: 26px; 
+  line-height: 1.3; 
+  font-weight: 400; 
+  transition: all 0.4s ease; 
+}
+
+.user-text { 
+  color: #94a3b8; 
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+.ai-text { 
+  color: #ffffff; 
+  font-weight: 500;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
+}
+
+
+/* --------------------------------- */
+/* THE BOTTOM WAVE (AVATAR)          */
+/* --------------------------------- */
+/* Instead of a circle, this anchors to the bottom and fills the screen */
+.avatar-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%; 
+  height: 45vh; /* Covers lower half of screen */
+  display: flex; 
+  justify-content: center; 
+  align-items: flex-end; /* Anchor to bottom */
+  z-index: 10;
+  overflow: visible;
+  cursor: pointer;
+}
+
+.avatar {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* CRITICAL: JS dynamic scale will scale UP from the bottom */
+  transform-origin: bottom center; 
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* The glowing, blurred liquid wave shapes */
+.orb-layer {
+  position: absolute;
+  bottom: -10vh; /* Hide the hard bottom edge */
+  border-radius: 50% 50% 0 0; /* Dome shape */
+  filter: blur(50px);
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  transition: all 1.5s ease-in-out;
+}
+
+/* Base Deep Blue */
+.layer-1 {
+  width: 150vw; 
+  height: 40vh;
+  background: #0022ff; 
+  z-index: 1;
+}
+/* Mid Cyan/Azure */
+.layer-2 {
+  width: 120vw; 
+  height: 30vh;
+  background: #0088ff; 
+  z-index: 2;
+}
+/* Bright Cyan Highlight */
+.layer-3 {
+  width: 90vw; 
+  height: 20vh;
+  background: #00d4ff; 
+  z-index: 3;
+}
+
+/* Central bright hotspot curve */
+.core {
+  position: absolute;
+  bottom: -5vh;
+  width: 60vw; 
+  height: 15vh;
+  background: #ffffff;
+  border-radius: 50% 50% 0 0;
+  filter: blur(40px);
+  z-index: 4;
+  opacity: 0.5;
+  transition: all 0.5s ease;
+}
+
+/* ------------------- */
+/* WAVE ANIMATIONS     */
+/* ------------------- */
+/* 1. IDLE - Slow breathing ocean */
+.avatar.idle .layer-1 { animation: waveFloat 10s infinite alternate ease-in-out; opacity: 0.6; }
+.avatar.idle .layer-2 { animation: waveFloat 12s infinite alternate-reverse ease-in-out; opacity: 0.5; }
+.avatar.idle .layer-3 { animation: waveFloat 8s infinite alternate ease-in-out; opacity: 0.3; }
+.avatar.idle .core { opacity: 0.1; }
+
+@keyframes waveFloat {
+  0% { transform: translateY(0) scaleX(1); }
+  50% { transform: translateY(-3vh) scaleX(1.05); }
+  100% { transform: translateY(2vh) scaleX(0.95); }
+}
+
+/* 2. LISTENING - Rises up, vibrant blue */
+.avatar.listening .layer-1 { background: #0033ff; animation: waveActive 4s infinite alternate; }
+.avatar.listening .layer-2 { background: #0066ff; animation: waveActive 3s infinite alternate-reverse; }
+.avatar.listening .layer-3 { background: #00f7ff; animation: waveActive 5s infinite alternate; }
+.avatar.listening .core { opacity: 0.6; }
+
+@keyframes waveActive {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-5vh); }
+}
+
+/* 3. THINKING - Shifts colors slightly, rotating effect */
+.avatar.thinking .layer-1 { background: #4285F4; animation: waveThink 2s infinite ease-in-out alternate; }
+.avatar.thinking .layer-2 { background: #8b5cf6; animation: waveThink 2.5s infinite ease-in-out alternate-reverse; }
+.avatar.thinking .layer-3 { background: #ec4899; }
+.avatar.thinking .core { opacity: 0.8; filter: blur(30px); }
+
+@keyframes waveThink {
+  0% { transform: translateX(-5vw) scaleY(1); }
+  100% { transform: translateX(5vw) scaleY(1.2); }
+}
+
+/* 4. SPEAKING - High energy pulsing (Gemini colors) */
+.avatar.speaking .layer-1 { background: #3b82f6; animation: waveSpeak 0.4s infinite alternate ease-out; }
+.avatar.speaking .layer-2 { background: #8b5cf6; animation: waveSpeak 0.5s infinite alternate-reverse ease-out; }
+.avatar.speaking .layer-3 { background: #ec4899; animation: waveSpeak 0.6s infinite alternate ease-out; }
+.avatar.speaking .core { opacity: 1; filter: blur(20px); animation: coreSpeak 0.3s infinite alternate; }
+
+@keyframes waveSpeak {
+  0% { transform: translateY(0) scaleY(0.95); }
+  100% { transform: translateY(-8vh) scaleY(1.1); }
+}
+@keyframes coreSpeak {
+  0% { transform: scaleY(0.8); opacity: 0.7; }
+  100% { transform: scaleY(1.5); opacity: 1; }
+}
+
+
+/* --------------------------------- */
+/* BOTTOM CONTROLS (MATCHING IMAGE)  */
+/* --------------------------------- */
+.bottom-controls {
+  position: absolute;
+  bottom: 50px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  z-index: 60;
+}
+
+.circle-btn {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.circle-btn:active {
+  transform: scale(0.92);
+}
+
+/* Dark transparent pause button */
+.pause-btn {
+  background: rgba(20, 20, 25, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Vibrant Red End button */
+.end-call-btn {
+  background: #f0142f; /* Deep vibrant red */
+  text-decoration: none;
+}
+.end-call-btn:hover {
+  background: #ff1a38;
+  box-shadow: 0 0 30px rgba(240, 20, 47, 0.5);
+}
+
+
+/* --------------------------------- */
+/* FALLBACK INPUT                    */
+/* --------------------------------- */
+.fallback-input-container {
+  width: 100%; 
+  margin-top: 40px;
+}
+
+.input-container {
+  display: flex;
+  padding: 8px 8px 8px 24px;
+  border-radius: 40px;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.input-container input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+.input-container input::placeholder {
+  color: #64748b;
+}
+
+#fallbackSendBtn {
+  background: white;
+  color: #030305;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+  .header { padding: 20px; }
+  .transcript { font-size: 22px; }
+  .user-text { font-size: 16px; }
+  .circle-btn { width: 60px; height: 60px; }
+  .bottom-controls { bottom: 30px; gap: 20px; }
+}

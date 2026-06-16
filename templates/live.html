@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Voice - NEHAL</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/live.css') }}">
+</head>
+<body>
+  <div class="app live-app">
+    
+    <header class="header">
+      <div class="header-left">
+        <svg class="sparkle" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        <span class="live-text">Live</span>
+      </div>
+      <div class="header-right" id="headerActions">
+        <span class="model" id="userBadge">Guest</span>
+      </div>
+    </header>
+
+    <main class="live-main">
+      
+      <div class="content-wrapper">
+        <div class="transcript-area">
+          <div id="userTranscript" class="transcript user-text">...</div>
+          <div id="aiTranscript" class="transcript ai-text">Hi, I'm listening.</div>
+        </div>
+
+        <div class="fallback-input-container" id="fallbackInputContainer" style="display: none;">
+          <div class="input-container blur-glass">
+            <input type="text" id="fallbackInput" placeholder="Type here if voice is not working..." autocomplete="off" />
+            <button id="fallbackSendBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="avatar-container" id="avatarContainer">
+        <div class="avatar idle" id="avatar">
+          <div class="glow-ring ripple-1"></div>
+          <div class="glow-ring ripple-2"></div>
+          
+          <div class="orb-layer layer-1"></div>
+          <div class="orb-layer layer-2"></div>
+          <div class="orb-layer layer-3"></div>
+          <div class="core"></div>
+        </div>
+      </div>
+
+      <div class="bottom-controls">
+        <button class="circle-btn pause-btn" aria-label="Pause">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <a href="/" class="circle-btn end-call-btn" aria-label="End Call">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </a>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/live.js') }}"></script>
+</body>
+</html>

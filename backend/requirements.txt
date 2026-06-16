@@ -2,3 +2,7 @@ Flask
 python-dotenv
 groq
 pymongo
+gunicorn
+edge-tts
+torchaudio
+speechbrain

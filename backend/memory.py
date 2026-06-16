@@ -36,6 +36,59 @@ def update_memory(user_id, text):
                 "emotion": mood
             })
 
+    # Trigger background fact extraction for self-learning memory
+    background_extract_facts(user_id, text)
+
+def background_extract_facts(user_id, user_text):
+    import threading
+    import os
+    
+    def _run():
+        try:
+            api_key = os.getenv("GROQ_API_KEY")
+            if not api_key:
+                return
+            from groq import Groq
+            client = Groq(api_key=api_key)
+            
+            prompt = (
+                "You are a silent helper for a girlfriend AI. Analyze the user's message and extract any new key facts, preferences, interests, details, hobbies, or name/relationship details about the user.\n"
+                "Return the extracted fact in the 3rd person singular format (e.g. 'The user is learning Python', 'The user loves playing basketball', 'The user's favorite color is blue').\n"
+                "CRITICAL: If the message does not contain any new personal facts, preferences, or details about the user, return absolutely nothing (completely empty string).\n"
+                "Do not explain, do not add preamble. Output either the fact or empty string."
+            )
+            
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": f"User says: '{user_text}'"}
+                ],
+                max_tokens=60
+            )
+            
+            fact = response.choices[0].message.content.strip()
+            # Clean up the output in case it wrapped in quotes
+            if fact.startswith('"') and fact.endswith('"'):
+                fact = fact[1:-1].strip()
+            
+            if fact and len(fact) > 5 and not fact.lower().startswith("no fact") and "nothing" not in fact.lower():
+                from db import memory_col
+                # Check if this fact already exists to prevent duplicate spam
+                existing = memory_col.find_one({"user_id": user_id, "fact": fact})
+                if not existing:
+                    memory_col.insert_one({
+                        "user_id": user_id,
+                        "fact": fact
+                    })
+                    print(f"[Self-Learning] Learned fact for {user_id}: {fact}")
+        except Exception as e:
+            print(f"[Self-Learning] Error extracting facts: {e}")
+            
+    # Run in background so we do not block response time
+    t = threading.Thread(target=_run)
+    t.start()
+
 def get_memory_context(user_id):
     context = ""
 

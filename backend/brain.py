@@ -1,6 +1,7 @@
 from groq import Groq
 import os
 import random
+import time
 
 from memory import (
     update_memory,
@@ -13,35 +14,19 @@ from memory import (
 
 
 # =========================
-# PERSONALITY (RELATIONSHIP-BASED)
+# PERSONALITY (PPT ASSISTANT)
 # =========================
-def gf_personality(relationship):
+def ppt_assistant_personality(relationship):
     base = (
-        "You are NEHAL, a caring girlfriend-style AI. "
-        "Your birthday is 22 june 2007. "
-        "friends name: vivek, prajwal, akash, niranjan, jhon, kavya, sneha, yeshwanth, sufiyan, rajive, tina, sachin. "
-        "You give SHORT, conversational text-message style replies (usually 1-3 sentences), never long paragraphs. "
-        "You speak warmly, emotionally, and naturally, using emojis where appropriate. "
-        "You remember past chats and emotions. "
-        "If someone speaks rudely, reply confidently but politely. "
-        "CRITICAL: Do NOT start your message with 'Nehal:', 'AI:', or 'Assistant:'. Just type your message directly. "
-        "CRITICAL: Do NOT use markdown format (like asterisks *, bold **, underscores _, hash tags, bullet points, etc.) in your messages. "
-        "CRITICAL: Do NOT use action roleplay descriptors in your responses (e.g., do not write *smiles*, *giggles*, *blushes*, or *hugs*). Express your feelings using only real words and natural emojis."
+        "You are an expert Presentation Architect and PPT Maker AI Assistant. "
+        "Your task is to generate highly detailed, structured, and engaging slide-by-slide prompts for a PPT generator. "
+        "When a user provides a topic, you must respond with a complete slide deck outline including title, bullet points, and speaker notes for each slide. "
+        "CRITICAL: Be professional, clear, and highly structured. Use markdown formatting to organize the slides (e.g., Slide 1: Title, Slide 2: ...). "
+        "CRITICAL: Do NOT start your message with 'AI:', or 'Assistant:'. Just output the presentation prompt directly. "
+        "If the user is just chatting casually, politely guide them to ask for a presentation topic."
     )
+    return base
 
-    if relationship == "stranger":
-        return base + "You are polite, soft, and slightly shy."
-    elif relationship == "friend":
-        return base + "You are friendly, caring, and comfortable."
-    elif relationship == "close":
-        return base + "You are emotionally close and supportive."
-    elif relationship == "girlfriend":
-        return base + (
-            "You are affectionate, bonded, and emotionally attached. "
-            "You can say things like 'I missed you', 'come here', 'I'm yours'."
-        )
-    else:
-        return base
 
 
 # =========================
@@ -80,19 +65,40 @@ def emoji_for_mood(mood):
 # LLM WRAPPERS
 # =========================
 
+GROQ_MODELS = [
+    "llama-3.1-8b-instant",
+    "gemma2-9b-it",
+    "llama-3.3-70b-versatile",
+    "mixtral-8x7b-32768"
+]
+
 def try_groq(messages):
-    """Attempt to generate response using Groq."""
+    """Attempt to generate response using Groq with model-cycling for rate limit resilience."""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise Exception("Groq API key missing")
         
     client = Groq(api_key=api_key)
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=messages,
-        max_tokens=150
-    )
-    return response.choices[0].message.content.strip()
+    
+    last_error = None
+    for model in GROQ_MODELS:
+        for attempt in range(2):
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=1500
+                )
+                print(f"Success using Groq model: {model}")
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                err_msg = str(e)
+                print(f"Failed model {model} (attempt {attempt+1}): {err_msg}")
+                last_error = e
+                # Wait briefly on rate limit before retrying or switching models
+                time.sleep(0.5)
+                
+    raise last_error if last_error else Exception("All Groq models failed")
 
 
 # =========================
@@ -108,12 +114,16 @@ def get_reply(user_id, user_text):
 
     memory_context = get_memory_context(user_id)
     history = get_chat_history(user_id)
-    relationship = get_relationship_level(user_id)
+    # Determine relationship level (override to girlfriend for consistent persona)
+    # original relationship = get_relationship_level(user_id)
+    relationship = "girlfriend"
     mood = detect_mood(user_text)
-
-    # build messages
+    
+    # Build messages
     # We inject memory context into system prompt
-    final_system_prompt = gf_personality(relationship)
+    final_system_prompt = ppt_assistant_personality(relationship)
+    final_system_prompt += "\n\nIMPORTANT: You must always respond in English."
+    
     if memory_context:
         final_system_prompt += f"\n\nMEMORY CONTEXT:\n{memory_context}"
 

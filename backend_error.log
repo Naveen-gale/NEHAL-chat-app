@@ -1,0 +1,8 @@
+name 'mood' is not defined
+Traceback (most recent call last):
+  File "c:\Users\galen\Desktop\NEHAL-chat-app\backend\app.py", line 252, in chat_voice
+    reply_data = get_reply(user_id, transcribed_text)
+  File "c:\Users\galen\Desktop\NEHAL-chat-app\backend\brain.py", line 165, in get_reply
+    ai_reply += emoji_for_mood(mood)
+                               ^^^^
+NameError: name 'mood' is not defined

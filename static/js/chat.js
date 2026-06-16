@@ -58,14 +58,17 @@ function addMessage(sender, text, mood = "normal") {
 /* 🔁 LOAD CHAT HISTORY ON PAGE LOAD */
 window.addEventListener("load", () => {
   chatArea.innerHTML = "";
+  updateAuthUI();
 
   fetch("/history")
     .then(res => res.json())
     .then(chats => {
       if (!Array.isArray(chats) || chats.length === 0) {
-        addMessage("ai", "Hello 👋 I am NEHAL. How can I help you today?");
-        return;
+        return; // Welcome screen is shown by default in HTML
       }
+      // Hide welcome screen since there is chat history
+      const ws = document.getElementById('welcomeScreen');
+      if (ws) ws.classList.add('hidden');
       chats.forEach(c => {
         const div = document.createElement("div");
         div.className = `message ${c.sender}`;
@@ -81,9 +84,57 @@ window.addEventListener("load", () => {
     });
 });
 
+function updateAuthUI() {
+  fetch("/auth_status")
+    .then(res => res.json())
+    .then(data => {
+      const headerActions = document.getElementById("headerActions");
+      const userBadge = document.getElementById("userBadge");
+      if (!headerActions) return;
+
+      if (data.is_registered) {
+        // Logged in
+        if (userBadge) {
+          userBadge.textContent = `${data.username}`;
+          userBadge.className = "model logged-in-badge";
+          userBadge.style.color = "#ec4899"; // pink color
+          userBadge.style.borderColor = "rgba(236, 72, 153, 0.3)";
+        }
+        // Update welcome screen name
+        const welcomeName = document.getElementById('welcomeName');
+        if (welcomeName) welcomeName.textContent = data.username;
+        // Check if logout button already exists
+        if (!document.getElementById("logoutBtn")) {
+          const logoutBtn = document.createElement("a");
+          logoutBtn.id = "logoutBtn";
+          logoutBtn.href = "/logout";
+          logoutBtn.className = "logout-btn";
+          logoutBtn.textContent = "Logout";
+          headerActions.appendChild(logoutBtn);
+        }
+      } else {
+        // Guest mode
+        if (userBadge) {
+          userBadge.textContent = "Guest";
+          userBadge.className = "model";
+          userBadge.style.color = "";
+          userBadge.style.borderColor = "";
+        }
+        // Remove logout button if it exists
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) logoutBtn.remove();
+      }
+    })
+    .catch(err => console.error("Error fetching auth status:", err));
+}
+
 function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
+
+  // Hide welcome screen on first message
+  const ws = document.getElementById('welcomeScreen');
+  if (ws) ws.classList.add('hidden');
 
   addMessage("user", msg);
   input.value = "";
@@ -100,6 +151,21 @@ function sendMessage() {
     .then(data => {
       // Remove placeholder loading indicator
       removeTypingIndicator();
+      if (data.requires_login) {
+        // Show auth prompt
+        const div = document.createElement("div");
+        div.className = "message system-auth-prompt";
+        div.innerHTML = `
+          <p>I'd love to keep chatting! Please sign up or log in to continue our conversation. ♥</p>
+          <div class="auth-buttons">
+            <a href="/login" class="auth-btn login-btn">Log In</a>
+            <a href="/signup" class="auth-btn signup-btn">Sign Up</a>
+          </div>
+        `;
+        chatArea.appendChild(div);
+        smoothScrollToBottom();
+        return;
+      }
       messageQueue.push({ sender: "ai", text: data.reply, mood: data.mood });
       processQueue();
     })

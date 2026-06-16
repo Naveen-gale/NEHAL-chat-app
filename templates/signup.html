@@ -13,13 +13,23 @@
       {% if error %}
         <div class="error-msg">{{ error }}</div>
       {% endif %}
-      <form action="/signup" method="POST">
+      <form id="signupForm" action="/signup" method="POST" enctype="multipart/form-data">
         <input type="text" name="username" placeholder="Username" autocomplete="off" required>
         <input type="password" name="password" placeholder="Password" required>
-        <button type="submit" class="auth-btn">Sign Up</button>
+        
+        <div class="voice-enrollment" style="margin: 15px 0; text-align: center;">
+          <p style="font-size: 0.9em; margin-bottom: 8px;">Record 5 seconds of your voice so NEHAL only listens to you:</p>
+          <button type="button" id="recordVoiceBtn" class="auth-btn" style="background: rgba(236, 72, 153, 0.2); border: 1px solid #ec4899;">🎤 Record Voice</button>
+          <div id="recordingStatus" style="font-size: 0.85em; color: #ec4899; margin-top: 5px; height: 1.2em;"></div>
+          <!-- Hidden input to store the audio blob before submission -->
+        </div>
+
+        <button type="submit" class="auth-btn" id="submitBtn">Sign Up</button>
       </form>
       <p class="auth-link">Already have an account? <a href="/login">Login</a></p>
     </div>
   </div>
+
+  <script src="{{ url_for('static', filename='js/signup.js') }}"></script>
 </body>
 </html>
