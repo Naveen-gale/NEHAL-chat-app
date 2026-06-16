@@ -2,6 +2,7 @@ from groq import Groq
 import os
 import random
 import time
+import json
 
 from memory import (
     update_memory,
@@ -100,6 +101,34 @@ def try_groq(messages):
                 
     raise last_error if last_error else Exception("All Groq models failed")
 
+def try_groq_stream(messages):
+    """Attempt to stream response using Groq with model-cycling for rate limit resilience."""
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise Exception("Groq API key missing")
+        
+    client = Groq(api_key=api_key)
+    
+    last_error = None
+    for model in GROQ_MODELS:
+        for attempt in range(2):
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=1500,
+                    stream=True
+                )
+                print(f"Success using Groq streaming model: {model}")
+                return response
+            except Exception as e:
+                err_msg = str(e)
+                print(f"Failed stream model {model} (attempt {attempt+1}): {err_msg}")
+                last_error = e
+                time.sleep(0.5)
+                
+    raise last_error if last_error else Exception("All Groq models failed to stream")
+
 
 # =========================
 # MAIN CHAT LOGIC
@@ -159,3 +188,55 @@ def get_reply(user_id, user_text):
         "relationship": relationship,
         "model": used_model
     }
+
+def get_reply_stream(user_id, user_text):
+    # save user message
+    save_message(user_id, "user", user_text)
+
+    # update memory & relationship FIRST
+    update_memory(user_id, user_text)
+    update_relationship(user_id, user_text)
+
+    memory_context = get_memory_context(user_id)
+    history = get_chat_history(user_id)
+    relationship = "girlfriend"
+    mood = detect_mood(user_text)
+    
+    # Build messages
+    final_system_prompt = ppt_assistant_personality(relationship)
+    final_system_prompt += "\n\nIMPORTANT: You must always respond in English."
+    
+    if memory_context:
+        final_system_prompt += f"\n\nMEMORY CONTEXT:\n{memory_context}"
+
+    messages = [
+        {"role": "system", "content": final_system_prompt}
+    ]
+
+    for h in history:
+        role = "user" if h["sender"] == "user" else "assistant"
+        messages.append({"role": role, "content": h["text"]})
+
+    try:
+        response_stream = try_groq_stream(messages)
+    except Exception as e:
+        print(f"Groq Stream Failed: {e}")
+        yield f"data: {json.dumps({'error': 'Server Error'})}\n\n"
+        return
+
+    full_reply = ""
+    for chunk in response_stream:
+        if chunk.choices[0].delta.content is not None:
+            text_chunk = chunk.choices[0].delta.content
+            full_reply += text_chunk
+            yield f"data: {json.dumps({'chunk': text_chunk})}\n\n"
+
+    emoji = emoji_for_mood(mood)
+    full_reply += emoji
+    if emoji:
+        yield f"data: {json.dumps({'chunk': emoji})}\n\n"
+        
+    yield f"data: [DONE]\n\n"
+
+    # save full AI reply
+    save_message(user_id, "ai", full_reply)

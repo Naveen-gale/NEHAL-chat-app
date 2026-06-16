@@ -7,6 +7,17 @@ const fallbackInputContainer = document.getElementById('fallbackInputContainer')
 const fallbackInput = document.getElementById('fallbackInput');
 const fallbackSendBtn = document.getElementById('fallbackSendBtn');
 const endCallBtn = document.querySelector('.end-call-btn');
+const liveCopyBtn = document.getElementById('liveCopyBtn');
+
+if (liveCopyBtn) {
+    liveCopyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(aiTranscript.textContent).then(() => {
+            const old = liveCopyBtn.textContent;
+            liveCopyBtn.textContent = "✅ Copied";
+            setTimeout(() => liveCopyBtn.textContent = old, 2000);
+        });
+    });
+}
 
 let mediaRecorder = null;
 let audioChunks = [];
@@ -235,6 +246,7 @@ function cleanupMic() {
 function sendAudioToBackend(audioBlob) {
     setAvatarState('thinking'); 
     aiTranscript.textContent = "Processing...";
+    if (liveCopyBtn) liveCopyBtn.classList.add("hidden");
     
     const formData = new FormData();
     formData.append("audio", audioBlob, "voice.webm");
@@ -274,6 +286,7 @@ function sendAudioToBackend(audioBlob) {
             endSession(); 
         } else {
             aiTranscript.textContent = data.reply;
+            if (liveCopyBtn) liveCopyBtn.classList.remove("hidden");
         }
 
         if (data.audio_url) {
@@ -343,6 +356,7 @@ function sendFallbackMessage() {
     
     setAvatarState('thinking');
     aiTranscript.textContent = "";
+    if (liveCopyBtn) liveCopyBtn.classList.add("hidden");
 
     const formData = new FormData();
     formData.append("text", text);
@@ -367,6 +381,7 @@ function sendFallbackMessage() {
             endSession();
         } else {
             aiTranscript.textContent = data.reply;
+            if (liveCopyBtn) liveCopyBtn.classList.remove("hidden");
         }
 
         if (data.audio_url) {

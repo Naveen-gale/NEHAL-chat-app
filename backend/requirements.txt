@@ -4,5 +4,3 @@ groq
 pymongo
 gunicorn
 edge-tts
-torchaudio
-speechbrain

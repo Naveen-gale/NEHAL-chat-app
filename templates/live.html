@@ -26,7 +26,10 @@
       <div class="content-wrapper">
         <div class="transcript-area">
           <div id="userTranscript" class="transcript user-text">...</div>
-          <div id="aiTranscript" class="transcript ai-text">Hi, I'm listening.</div>
+          <div style="position: relative; width: 100%;">
+            <div id="aiTranscript" class="transcript ai-text">Hi, I'm listening.</div>
+            <button id="liveCopyBtn" class="copy-btn hidden" style="position: absolute; top: 10px; right: 10px; z-index: 50;">📋 Copy</button>
+          </div>
         </div>
 
         <div class="fallback-input-container" id="fallbackInputContainer" style="display: none;">

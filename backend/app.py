@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, send_from_directory, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, send_from_directory, redirect, url_for, Response, stream_with_context
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import users_col, chats_col
 import uuid
@@ -6,7 +6,7 @@ import os
 import time
 import threading
 from dotenv import load_dotenv
-from brain import get_reply
+from brain import get_reply, get_reply_stream
 import edge_tts
 import asyncio
 
@@ -76,6 +76,24 @@ def chat():
 
     reply_data = get_reply(user_id, msg)
     return jsonify(reply_data)
+
+@app.route("/chat_stream", methods=["POST"])
+def chat_stream():
+    data = request.get_json()
+    msg = data.get("message", "").strip()
+
+    user_id = session.get("user_id")
+    is_registered = session.get("is_registered", False)
+
+    if not is_registered:
+        msg_count = chats_col.count_documents({"user_id": user_id, "sender": "user"})
+        if msg_count >= 2:
+            import json
+            def err_gen():
+                yield f"data: {json.dumps({'requires_login': True})}\n\n"
+            return Response(stream_with_context(err_gen()), mimetype='text/event-stream')
+
+    return Response(stream_with_context(get_reply_stream(user_id, msg)), mimetype='text/event-stream')
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -151,9 +169,18 @@ def history():
 
 @app.route("/auth_status")
 def auth_status():
+    is_registered = session.get("is_registered", False)
+    username = None
+    if is_registered:
+        user_doc = users_col.find_one({"user_id": session.get("user_id", "")})
+        if user_doc:
+            username = user_doc.get("username", "")
+        else:
+            session["is_registered"] = False
+            is_registered = False
     return jsonify({
-        "is_registered": session.get("is_registered", False),
-        "username": users_col.find_one({"user_id": session.get("user_id", "")}).get("username", "") if session.get("is_registered") else None
+        "is_registered": is_registered,
+        "username": username
     })
 
 @app.route("/live")

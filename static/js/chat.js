@@ -2,8 +2,6 @@ const chatArea = document.getElementById("chatArea");
 const input = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
 
-let isTyping = false;
-let messageQueue = [];
 let typingIndicator = null;
 
 function smoothScrollToBottom() {
@@ -29,30 +27,27 @@ function removeTypingIndicator() {
   }
 }
 
-function processQueue() {
-  if (isTyping || messageQueue.length === 0) return;
-  const curr = messageQueue.shift();
-
-  isTyping = true;
-  showTypingIndicator();
-
-  // Simulated human typing time based on message length (min 1.0s, max 3.5s)
-  const typingDuration = Math.min(3500, Math.max(1000, curr.text.length * 20));
-
-  setTimeout(() => {
-    removeTypingIndicator();
-    addMessage(curr.sender, curr.text, curr.mood);
-    isTyping = false;
-    processQueue();
-  }, typingDuration);
+window.copyText = function(btn) {
+  const text = btn.previousElementSibling.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const old = btn.textContent;
+    btn.textContent = "✅ Copied";
+    setTimeout(() => btn.textContent = old, 2000);
+  });
 }
 
 function addMessage(sender, text, mood = "normal") {
   const div = document.createElement("div");
   div.className = `message ${sender} mood-${mood}`;
-  div.textContent = text;
+  if (sender === 'ai') {
+    div.innerHTML = `<div class="msg-content"></div><button class="copy-btn" onclick="copyText(this)">📋 Copy</button>`;
+    div.querySelector('.msg-content').textContent = text;
+  } else {
+    div.textContent = text;
+  }
   chatArea.appendChild(div);
   smoothScrollToBottom();
+  return div;
 }
 
 /* 🔁 LOAD CHAT HISTORY ON PAGE LOAD */
@@ -70,10 +65,7 @@ window.addEventListener("load", () => {
       const ws = document.getElementById('welcomeScreen');
       if (ws) ws.classList.add('hidden');
       chats.forEach(c => {
-        const div = document.createElement("div");
-        div.className = `message ${c.sender}`;
-        div.textContent = c.text;
-        chatArea.appendChild(div);
+        addMessage(c.sender, c.text, c.mood || "normal");
       });
       // Scroll bottom after load
       chatArea.scrollTop = chatArea.scrollHeight;
@@ -128,7 +120,7 @@ function updateAuthUI() {
     .catch(err => console.error("Error fetching auth status:", err));
 }
 
-function sendMessage() {
+async function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
 
@@ -139,40 +131,82 @@ function sendMessage() {
   addMessage("user", msg);
   input.value = "";
 
-  // Show typing indicator immediately while waiting for server response
   showTypingIndicator();
 
-  fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
-  })
-    .then(res => res.json())
-    .then(data => {
-      // Remove placeholder loading indicator
-      removeTypingIndicator();
-      if (data.requires_login) {
-        // Show auth prompt
-        const div = document.createElement("div");
-        div.className = "message system-auth-prompt";
-        div.innerHTML = `
-          <p>I'd love to keep chatting! Please sign up or log in to continue our conversation. ♥</p>
-          <div class="auth-buttons">
-            <a href="/login" class="auth-btn login-btn">Log In</a>
-            <a href="/signup" class="auth-btn signup-btn">Sign Up</a>
-          </div>
-        `;
-        chatArea.appendChild(div);
-        smoothScrollToBottom();
-        return;
-      }
-      messageQueue.push({ sender: "ai", text: data.reply, mood: data.mood });
-      processQueue();
-    })
-    .catch(() => {
-      removeTypingIndicator();
-      addMessage("ai", "⚠️ Server error");
+  try {
+    const response = await fetch("/chat_stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
     });
+    
+    removeTypingIndicator();
+    
+    if (!response.ok) throw new Error("Server error");
+    
+    // Create AI message bubble for streaming
+    const aiDiv = document.createElement("div");
+    aiDiv.className = `message ai`;
+    aiDiv.innerHTML = `<div class="msg-content"></div><button class="copy-btn hidden" onclick="copyText(this)">📋 Copy</button>`;
+    chatArea.appendChild(aiDiv);
+    const contentDiv = aiDiv.querySelector('.msg-content');
+    const copyBtn = aiDiv.querySelector('.copy-btn');
+    
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+    let buffer = "";
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        copyBtn.classList.remove("hidden");
+        break;
+      }
+      
+      buffer += decoder.decode(value, { stream: true });
+      let boundary = buffer.indexOf("\n\n");
+      
+      while (boundary !== -1) {
+        const line = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        boundary = buffer.indexOf("\n\n");
+        
+        if (line.startsWith("data: ")) {
+          const dataStr = line.slice(6);
+          if (dataStr === "[DONE]") {
+            copyBtn.classList.remove("hidden");
+            break;
+          }
+          try {
+            const data = JSON.parse(dataStr);
+            if (data.requires_login) {
+               // Show auth prompt
+               aiDiv.innerHTML = `
+                  <p>I'd love to keep chatting! Please sign up or log in to continue our conversation. ♥</p>
+                  <div class="auth-buttons">
+                    <a href="/login" class="auth-btn login-btn">Log In</a>
+                    <a href="/signup" class="auth-btn signup-btn">Sign Up</a>
+                  </div>
+                `;
+               smoothScrollToBottom();
+               return;
+            } else if (data.chunk) {
+               fullText += data.chunk;
+               contentDiv.textContent = fullText;
+               smoothScrollToBottom();
+            } else if (data.error) {
+               fullText += "\n" + data.error;
+               contentDiv.textContent = fullText;
+            }
+          } catch(e) {}
+        }
+      }
+    }
+  } catch(e) {
+    removeTypingIndicator();
+    addMessage("ai", "⚠️ Server error");
+  }
 }
 
 /* ⌨️ EVENT LISTENERS */
@@ -182,7 +216,3 @@ input.addEventListener("keydown", e => {
 if (sendBtn) {
   sendBtn.addEventListener("click", sendMessage);
 }
-
-
-
-let aichat = 0;
