@@ -4,3 +4,5 @@ groq
 pymongo
 gunicorn
 edge-tts
+langdetect
+langcodes

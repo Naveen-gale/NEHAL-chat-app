@@ -449,7 +449,7 @@ def try_groq_stream(messages):
 # =========================
 # MAIN CHAT LOGIC
 # =========================
-def get_reply(user_id, user_text):
+def get_reply(user_id, user_text, language="English"):
     # save user message
     save_message(user_id, "user", user_text)
 
@@ -467,7 +467,7 @@ def get_reply(user_id, user_text):
     # Build messages
     # We inject memory context into system prompt
     final_system_prompt = ppt_assistant_personality(relationship)
-    final_system_prompt += "\n\nIMPORTANT: You must always respond in English."
+    final_system_prompt += f"\n\nIMPORTANT: You must always respond in {language}."
     
     if memory_context:
         final_system_prompt += f"\n\nMEMORY CONTEXT:\n{memory_context}"
@@ -505,7 +505,7 @@ def get_reply(user_id, user_text):
         "model": used_model
     }
 
-def get_reply_stream(user_id, user_text):
+def get_reply_stream(user_id, user_text, language="English"):
     # save user message
     save_message(user_id, "user", user_text)
 
@@ -520,7 +520,7 @@ def get_reply_stream(user_id, user_text):
     
     # Build messages
     final_system_prompt = ppt_assistant_personality(relationship)
-    final_system_prompt += "\n\nIMPORTANT: You must always respond in English."
+    final_system_prompt += f"\n\nIMPORTANT: You must always respond in {language}."
     
     if memory_context:
         final_system_prompt += f"\n\nMEMORY CONTEXT:\n{memory_context}"

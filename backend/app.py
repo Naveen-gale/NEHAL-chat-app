@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from brain import get_reply, get_reply_stream
 import edge_tts
 import asyncio
+import langdetect
 
 def generate_edge_tts_sync(text, output_file):
     async def _generate():
@@ -74,7 +75,15 @@ def chat():
         if msg_count >= 2:
             return jsonify({"requires_login": True})
 
-    reply_data = get_reply(user_id, msg)
+    try:
+        lang_code = langdetect.detect(msg)
+        from langcodes import Language
+        # Convert 'es' to 'Spanish'
+        lang_name = Language.make(language=lang_code).display_name() if lang_code else "English"
+    except:
+        lang_name = "English"
+
+    reply_data = get_reply(user_id, msg, language=lang_name)
     return jsonify(reply_data)
 
 @app.route("/chat_stream", methods=["POST"])
@@ -93,7 +102,14 @@ def chat_stream():
                 yield f"data: {json.dumps({'requires_login': True})}\n\n"
             return Response(stream_with_context(err_gen()), mimetype='text/event-stream')
 
-    return Response(stream_with_context(get_reply_stream(user_id, msg)), mimetype='text/event-stream')
+    try:
+        lang_code = langdetect.detect(msg)
+        from langcodes import Language
+        lang_name = Language.make(language=lang_code).display_name() if lang_code else "English"
+    except:
+        lang_name = "English"
+
+    return Response(stream_with_context(get_reply_stream(user_id, msg, language=lang_name)), mimetype='text/event-stream')
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -301,8 +317,15 @@ def chat_voice():
                     "requires_login": True
                 })
 
+        try:
+            lang_code = langdetect.detect(transcribed_text)
+            from langcodes import Language
+            lang_name = Language.make(language=lang_code).display_name() if lang_code else "English"
+        except:
+            lang_name = "English"
+
         # Get AI reply
-        reply_data = get_reply(user_id, transcribed_text)
+        reply_data = get_reply(user_id, transcribed_text, language=lang_name)
         reply_text = reply_data.get("reply", "")
         
         # Decide what to speak (if text is very long, just speak a short summary)
