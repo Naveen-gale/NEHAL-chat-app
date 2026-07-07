@@ -6,6 +6,9 @@ gunicorn
 edge-tts
 langdetect
 langcodes
+language_data
+joblib
+scikit-learn
 
 # PyTorch and SpeechBrain dependencies are commented out for Render's free tier 
 # to avoid Out-Of-Memory (OOM) and disk space errors. 
