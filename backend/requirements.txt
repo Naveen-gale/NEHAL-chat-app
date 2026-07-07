@@ -6,3 +6,8 @@ gunicorn
 edge-tts
 langdetect
 langcodes
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchaudio
+speechbrain
