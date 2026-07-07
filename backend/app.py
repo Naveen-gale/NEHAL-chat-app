@@ -34,7 +34,11 @@ except Exception as e:
 
 # ---------------------------------------------
 
-import joblib
+try:
+    import joblib
+except ImportError:
+    joblib = None
+
 import langdetect
 from dotenv import load_dotenv
 
@@ -44,6 +48,8 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 svm_lang_model = None
 try:
+    if joblib is None:
+        raise ImportError("joblib is not installed")
     # Attempt to load custom SVM language model pipeline
     model_path = os.path.join(BASE_DIR, "model", "svm_model.pkl")
     if os.path.exists(model_path):

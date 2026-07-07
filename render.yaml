@@ -10,3 +10,5 @@ services:
         value: 3.10.0
       - key: GROQ_API_KEY
         sync: false
+      - key: MONGODB_URI
+        sync: false

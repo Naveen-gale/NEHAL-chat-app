@@ -7,7 +7,10 @@ edge-tts
 langdetect
 langcodes
 
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
-torchaudio
-speechbrain
+# PyTorch and SpeechBrain dependencies are commented out for Render's free tier 
+# to avoid Out-Of-Memory (OOM) and disk space errors. 
+# Uncomment these if you upgrade your Render plan or run locally.
+# --extra-index-url https://download.pytorch.org/whl/cpu
+# torch
+# torchaudio
+# speechbrain

@@ -26,6 +26,7 @@ This guide explains how to deploy the NEHAL PPT Assistant application to Render.
    - Scroll down to the Environment Variables section and add:
      - `PYTHON_VERSION` = `3.10.0`
      - `GROQ_API_KEY` = *(paste your Groq key here)*
+     - `MONGODB_URI` = *(paste your MongoDB connection string here)*
 5. **Deploy**:
    - Click **Create Web Service** at the bottom. Render will now build and deploy the app completely for free!
 
