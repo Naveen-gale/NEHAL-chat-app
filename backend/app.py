@@ -32,9 +32,42 @@ except Exception as e:
     speaker_model = None
 # ---------------------------------------------
 
+# ---------------------------------------------
+
+import joblib
+import langdetect
+from dotenv import load_dotenv
+
 load_dotenv() # Load environment variables from .env file
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+svm_lang_model = None
+try:
+    # Attempt to load custom SVM language model pipeline
+    model_path = os.path.join(BASE_DIR, "model", "svm_model.pkl")
+    if os.path.exists(model_path):
+        svm_lang_model = joblib.load(model_path)
+        print("Custom SVM Language Model loaded successfully.")
+    else:
+        print("Custom SVM model not found. Will use langdetect.")
+except Exception as e:
+    print(f"Warning: Failed to load custom SVM model: {e}. Falling back to langdetect.")
+
+def detect_language_name(text):
+    try:
+        if svm_lang_model is not None:
+            # Predict returns an array, take the first element (the language code)
+            lang_code = svm_lang_model.predict([text])[0]
+        else:
+            lang_code = langdetect.detect(text)
+            
+        from langcodes import Language
+        return Language.make(language=lang_code).display_name() if lang_code else "English"
+    except Exception as e:
+        print(f"Language detection error: {e}")
+        return "English"
+
 AUDIO_DIR = os.path.join(BASE_DIR, "static", "audio")
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
@@ -75,13 +108,7 @@ def chat():
         if msg_count >= 2:
             return jsonify({"requires_login": True})
 
-    try:
-        lang_code = langdetect.detect(msg)
-        from langcodes import Language
-        # Convert 'es' to 'Spanish'
-        lang_name = Language.make(language=lang_code).display_name() if lang_code else "English"
-    except:
-        lang_name = "English"
+    lang_name = detect_language_name(msg)
 
     reply_data = get_reply(user_id, msg, language=lang_name)
     return jsonify(reply_data)
@@ -102,12 +129,7 @@ def chat_stream():
                 yield f"data: {json.dumps({'requires_login': True})}\n\n"
             return Response(stream_with_context(err_gen()), mimetype='text/event-stream')
 
-    try:
-        lang_code = langdetect.detect(msg)
-        from langcodes import Language
-        lang_name = Language.make(language=lang_code).display_name() if lang_code else "English"
-    except:
-        lang_name = "English"
+    lang_name = detect_language_name(msg)
 
     return Response(stream_with_context(get_reply_stream(user_id, msg, language=lang_name)), mimetype='text/event-stream')
 
@@ -317,12 +339,7 @@ def chat_voice():
                     "requires_login": True
                 })
 
-        try:
-            lang_code = langdetect.detect(transcribed_text)
-            from langcodes import Language
-            lang_name = Language.make(language=lang_code).display_name() if lang_code else "English"
-        except:
-            lang_name = "English"
+        lang_name = detect_language_name(transcribed_text)
 
         # Get AI reply
         reply_data = get_reply(user_id, transcribed_text, language=lang_name)

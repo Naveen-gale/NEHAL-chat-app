@@ -3,7 +3,7 @@ services:
     name: nehal-ppt-assistant
     env: python
     plan: free
-    buildCommand: "cd backend && pip install -r requirements.txt"
+    buildCommand: "cd backend && pip install -r requirements.txt && python download_model.py"
     startCommand: "cd backend && gunicorn app:app --bind 0.0.0.0:$PORT"
     envVars:
       - key: PYTHON_VERSION
